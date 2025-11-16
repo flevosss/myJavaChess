@@ -83,7 +83,11 @@ public class Game {
 
     public void doMove(Move move) {
         //check valid etc, turn
-        isValidForPiece(move);
+        if (!isValidForPiece(move)){
+            System.out.println("not a valid move");
+            return;
+        }
+
         Piece pieceTobeMoved = board.getPiece(move.getFromRow(), move.getFromCol());
         if (pieceTobeMoved.getType() == PieceType.EMPTY){
             System.out.println("Nothing to move");
