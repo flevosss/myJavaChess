@@ -60,7 +60,8 @@ public class GameInputHandler extends MouseAdapter {
                 selected.getRow(),
                 selected.getColumn(),
                 targetRow,
-                targetCol
+                targetCol,
+                selected
         );
 
         game.doMove(move);

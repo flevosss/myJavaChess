@@ -32,4 +32,13 @@ public class Player {
     public Game getGame() {
         return game;
     }
+
+    @Override
+    public String toString() {
+        return "Player{" +
+                "name='" + name + '\'' +
+                ", pieceColour=" + pieceColour +
+                ", game=" + game +
+                '}';
+    }
 }

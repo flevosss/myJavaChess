@@ -28,4 +28,14 @@ public class Piece {
     public PieceColour getColour() { return colour; }
     public int getRow() { return row; }
     public int getColumn() { return column; }
+
+    @Override
+    public String toString() {
+        return "Piece{" +
+                "type=" + type +
+                ", colour=" + colour +
+                ", row=" + row +
+                ", column=" + column +
+                '}';
+    }
 }
