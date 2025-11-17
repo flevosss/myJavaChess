@@ -1,5 +1,8 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Board{
 
     public final Piece[][] pieces;
@@ -42,8 +45,44 @@ public class Board{
         setField(new Piece(PieceType.EMPTY, PieceColour.EMPTY, row, column));
     }
 
+    public Piece getKing(PieceColour colour) {
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < columns; col++) {
+                Piece p = pieces[row][col];
+                if (p.getType() == PieceType.KING && p.getColour() == colour) {
+                    return p;
+                }
+            }
+        }
+        return null;
+    }
+
+
     public Piece getPiece(int row, int column) {
         return pieces[row][column];
+    }
+
+    public List<Piece> getPiecesOnBoard(){
+        List<Piece> result = new ArrayList<>();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                result.add(getPiece(i,j));
+            }
+        }
+        return result;
+    }
+
+    public List<Piece> getOpponentPiecesOnBoard(PieceColour colour){
+        List<Piece> result = new ArrayList<>();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                Piece piece = getPiece(i,j);
+                if (piece.getColour() != colour) {
+                    result.add(getPiece(i, j));
+                }
+            }
+        }
+        return result;
     }
 
     public boolean isInBounds(int row, int column){
