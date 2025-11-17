@@ -104,7 +104,7 @@ public class GraphicsBoard extends JPanel {
         }
     }
 
-    public int getTileSize(){
+    public int getTileSize() {
         return this.tileSize;
     }
 }

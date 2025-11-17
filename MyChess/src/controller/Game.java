@@ -41,7 +41,7 @@ public class Game {
             return;
         }
         Piece pieceTobeMoved = board.getPiece(move.getFromRow(), move.getFromCol());
-        
+
         board.removeField(move.getFromRow(), move.getFromCol());
         pieceTobeMoved.setRow(move.getToRow());
         pieceTobeMoved.setColumn(move.getToCol());
@@ -72,17 +72,104 @@ public class Game {
             System.out.println("cant kill your teammate");
             return false;
         }
+        //check out of bounds
+        if (!board.isInBounds(move.getToRow(), move.getToCol())) {
+            System.out.println("not in bounds");
+            return false;
+        }
         boolean result = false;
         switch (pieceTobeMoved.getType()) {
-            case PAWN -> {
+            case PAWN ->
                 result = checkPawn(move);
-
-            }
             case KNIGHT ->
-                result = true;
+                result = checkKnight(move);
+            case BISHOP ->
+                result = checkBishop(move);
+            case ROOK ->
+                result = checkRook(move);
+            case QUEEN ->
+                result = checkQueen(move);
+            case KING ->
+                result = checkKing(move);
 
         }
         return result;
+    }
+
+    private boolean checkKing(Move move) {
+        return false;
+    }
+
+    private boolean checkQueen(Move move) {
+        return checkRook(move) || checkBishop(move);
+    }
+
+    private boolean checkRook(Move move) {
+        int fromRow = move.getFromRow();
+        int fromCol = move.getFromCol();
+        int toRow   = move.getToRow();
+        int toCol   = move.getToCol();
+
+        //must be straight
+        if (fromRow != toRow && fromCol != toCol) {
+            return false;
+        }
+
+        int rowInc = Integer.compare(toRow, fromRow);
+        int colInc = Integer.compare(toCol, fromCol);
+
+        List<Piece> between = getInBetweenPieces(move, rowInc, colInc);
+        for (Piece piece : between) {
+            if (piece.getType() != PieceType.EMPTY) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private List<Piece> getInBetweenPieces(Move move, int rowIncrement, int colIncrement) {
+        List<Piece> result = new ArrayList<>();
+
+        int fromRow = move.getFromRow();
+        int fromCol = move.getFromCol();
+        int toRow   = move.getToRow();
+        int toCol   = move.getToCol();
+
+        int currentRow = fromRow + rowIncrement;
+        int currentCol = fromCol + colIncrement;
+
+        while (currentRow != toRow || currentCol != toCol) {
+            result.add(board.getPiece(currentRow, currentCol));
+            currentRow += rowIncrement;
+            currentCol += colIncrement;
+        }
+        return result;
+    }
+
+
+    private boolean checkBishop(Move move) {
+        //must be diagonal
+        int rowDiff = Math.abs(move.getToRow() - move.getFromRow());
+        int colDiff = Math.abs(move.getToCol() - move.getFromCol());
+        if (rowDiff != colDiff) {
+            return false;
+        }
+        int rowIncrement = (rowDiff > 0) ? 1 : -1;
+        int columnIncrement = (colDiff > 0) ? 1 : -1;
+        List<Piece> piecesInBetween = getInBetweenPieces(move, rowIncrement, columnIncrement);
+        for (Piece piece : piecesInBetween) {
+            if (piece.getType() != PieceType.EMPTY) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean checkKnight(Move move) {
+        int rowDifference = Math.abs(move.getToRow() - move.getFromRow());
+        int columnDifference = Math.abs(move.getToCol() - move.getFromCol());
+
+        return (rowDifference == 2 && columnDifference == 1) || (rowDifference == 1 && columnDifference == 2);
     }
 
     private boolean isFirstMoveForPawn(Piece piece){
