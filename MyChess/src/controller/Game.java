@@ -164,6 +164,16 @@ public class Game {
     }
 
     private boolean isValidMove(Move move) {
+        if (move.getFromRow() == move.getToRow() && move.getFromCol() == move.getToCol()) {
+            System.out.println("piece must move");
+            return false;
+        }
+
+        if (!board.isInBounds(move.getToRow(), move.getToCol())) {
+            System.out.println("not in bounds");
+            return false;
+        }
+
         Piece pieceTobeMoved = board.getPiece(move.getFromRow(), move.getFromCol());
         if (pieceTobeMoved.getType() == PieceType.EMPTY){
             System.out.println("Nothing to move");
@@ -179,11 +189,6 @@ public class Game {
         PieceColour goToPiece = board.getPiece(move.getToRow(), move.getToCol()).getColour();
         if (pieceColour == goToPiece) {
             System.out.println("cant kill your teammate");
-            return false;
-        }
-
-        if (!board.isInBounds(move.getToRow(), move.getToCol())) {
-            System.out.println("not in bounds");
             return false;
         }
 
