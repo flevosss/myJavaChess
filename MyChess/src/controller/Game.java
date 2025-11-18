@@ -80,12 +80,20 @@ public class Game {
         Piece pieceTobeMoved = board.getPiece(move.getFromRow(), move.getFromCol());
 
         board.removeField(move.getFromRow(), move.getFromCol());
+
+        if (move.isEnPassant()) {
+            int capturedRow = move.getFromRow();
+            int capturedCol = move.getToCol();
+            board.removeField(capturedRow, capturedCol);
+        }
+
         pieceTobeMoved.setRow(move.getToRow());
         pieceTobeMoved.setColumn(move.getToCol());
-        changeTurns();
-        movesPlayed.add(move);
-
         board.setField(pieceTobeMoved);
+
+        movesPlayed.add(move);
+        changeTurns();
+
         kingInCheck = isKingInCheck(currentTurn.getPieceColour());
 
         boolean hasMove = !getValidMoves(currentTurn.getPieceColour()).isEmpty();
@@ -149,6 +157,42 @@ public class Game {
         return false;
     }
 
+    /**
+     * Checks if the given pawn move is an en passant capture, based on the last move.
+     */
+    private boolean isEnPassantMove(Move move, Piece pawn) {
+        int fromRow = move.getFromRow();
+        int fromCol = move.getFromCol();
+        int toRow   = move.getToRow();
+        int toCol   = move.getToCol();
+
+        if (pawn.getType() != PieceType.PAWN) return false;
+        if (movesPlayed.isEmpty()) return false;
+
+        //target square must be empty
+        if (board.getPiece(toRow, toCol).getType() != PieceType.EMPTY) return false;
+
+        int direction = pawn.getColour() == PieceColour.WHITE ? -1 : 1;
+        int directionRow = toRow - fromRow;
+        int directionCol = toCol - fromCol;
+
+        //our pawn moves one step diagonally forward
+        if (!(Math.abs(directionCol) == 1 && directionRow == direction)) {
+            return false;
+        }
+        //fixme dont understand
+        Move last = movesPlayed.getLast();
+        Piece lastPiece = last.getPiece();
+
+        //last move must be enemy pawn double step
+        if (lastPiece.getType() != PieceType.PAWN) return false;
+        if (lastPiece.getColour() == pawn.getColour()) return false;
+        if (Math.abs(last.getFromRow() - last.getToRow()) != 2) return false;
+
+        if (last.getToRow() != fromRow) return false;
+        return last.getToCol() == toCol;
+    }
+    
     /**
      * Checks if a king can attack a piece.
      * @param move the move the king wants to play.
@@ -247,11 +291,25 @@ public class Game {
         int toCol   = move.getToCol();
 
         PieceColour colour = movingPiece.getColour();
-        Piece captured = board.getPiece(toRow, toCol);
+
+        int capturedRow;
+        int capturedCol;
+
+        if (move.isEnPassant()) {
+            capturedRow = fromRow;  // enemy pawn is on our original rank
+        } else {
+            capturedRow = toRow;
+        }
+        capturedCol = toCol;
+
+
+        Piece captured = board.getPiece(capturedRow, capturedCol);
 
         //fake move
         board.removeField(fromRow, fromCol);
-        board.removeField(toRow, toCol);
+        if (captured.getType() != PieceType.EMPTY) {
+            board.removeField(capturedRow, capturedCol);
+        }
 
         movingPiece.setRow(toRow);
         movingPiece.setColumn(toCol);
@@ -361,8 +419,8 @@ public class Game {
     private boolean isValidForPawn(Move move) {
         int fromRow = move.getFromRow();
         int fromCol = move.getFromCol();
-        int toRow   = move.getToRow();
-        int toCol   = move.getToCol();
+        int toRow = move.getToRow();
+        int toCol = move.getToCol();
 
         Piece pawn = board.getPiece(move.getFromRow(), move.getFromCol());
         Piece target = board.getPiece(toRow, toCol);
@@ -385,7 +443,7 @@ public class Game {
                 return false;
             }
 
-            if(Math.abs(directionRow) == 2) {
+            if (Math.abs(directionRow) == 2) {
                 //dont hop on another pawn :D
                 if (board.getPiece(fromRow + direction, fromCol).getType() != PieceType.EMPTY) {
                     return false;
@@ -402,9 +460,16 @@ public class Game {
 
         //check diagonal move
         if (Math.abs(directionCol) == 1 && directionRow == direction) {
-            return target.getColour().equals(pawn.getColour().getOtherColour());
+            if (target.getType() != PieceType.EMPTY) {
+                return target.getColour().equals(pawn.getColour().getOtherColour());
+            } else {
+                if (isEnPassantMove(move, pawn)) {
+                    move.setEnPassant(true);
+                    return true;
+                }
+                return false;
+            }
         }
-
         return false;
     }
 

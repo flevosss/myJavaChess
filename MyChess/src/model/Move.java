@@ -7,6 +7,8 @@ public class Move {
     private final int toCol;
     private final Piece piece;
 
+    private boolean enPassant = false;
+
     public Move (int fromRow, int fromCol, int toRow, int toCol, Piece piece){
         this.fromCol = fromCol;
         this.fromRow = fromRow;
@@ -33,5 +35,13 @@ public class Move {
 
     public int getToRow() {
         return toRow;
+    }
+
+    public boolean isEnPassant() {
+        return enPassant;
+    }
+
+    public void setEnPassant(boolean enPassant) {
+        this.enPassant = enPassant;
     }
 }
