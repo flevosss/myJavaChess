@@ -8,7 +8,6 @@ import java.util.List;
 
 public class Game {
     private final Board board;
-    private GameInputHandler gameInputHandler;
     private final GraphicsBoard view;
 
     private Piece selectedPiece;
@@ -34,7 +33,7 @@ public class Game {
         movesPlayed = new ArrayList<>();
 
         view = new GraphicsBoard(board,85);
-        gameInputHandler = new GameInputHandler(this, view);
+        GameInputHandler gameInputHandler = new GameInputHandler(this, view);
 
         view.addMouseListener(gameInputHandler);
         view.addMouseMotionListener(gameInputHandler);
@@ -72,7 +71,7 @@ public class Game {
             System.out.println("Game is over");
             return;
         }
-        //check valid etc, turn
+
         if (!isValidMove(move)){
             System.out.println("not a valid move");
             return;
@@ -87,9 +86,28 @@ public class Game {
             board.removeField(capturedRow, capturedCol);
         }
 
+        boolean isCastling = pieceTobeMoved.getType() == PieceType.KING
+                && move.getFromRow() == move.getToRow()
+                && Math.abs(move.getToCol() - move.getFromCol()) == 2;
+
+
         pieceTobeMoved.setRow(move.getToRow());
         pieceTobeMoved.setColumn(move.getToCol());
         board.setField(pieceTobeMoved);
+
+        handlePawnPromotion(pieceTobeMoved);
+
+        if (isCastling) {
+            boolean kingSide = move.getToCol() > move.getFromCol();
+            int rookFromCol  = kingSide ? 7 : 0;
+            int rookToCol    = kingSide ? move.getToCol()  - 1 : move.getToCol()  + 1;
+
+            Piece rook = board.getPiece(move.getToRow(), rookFromCol);
+            board.removeField(move.getToRow(), rookFromCol);
+            rook.setRow(move.getToRow());
+            rook.setColumn(rookToCol);
+            board.setField(rook);
+        }
 
         movesPlayed.add(move);
         changeTurns();
@@ -106,6 +124,121 @@ public class Game {
             System.out.println("Stalemate! " + currentTurn + " has no legal moves.");
         }
         view.repaint();
+    }
+
+    private boolean hasKingMoved(PieceColour colour) {
+        for (Move m : movesPlayed) {
+            Piece p = m.getPiece();
+            if (p.getType() == PieceType.KING && p.getColour() == colour) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void handlePawnPromotion(Piece pawn) {
+        if (pawn.getType() != PieceType.PAWN) {
+            return;
+        }
+
+        int row = pawn.getRow();
+        PieceColour colour = pawn.getColour();
+
+        //white pawns promote on row 0, black pawns on row 7
+        boolean promote =
+                (colour == PieceColour.WHITE && row == 0) ||
+                        (colour == PieceColour.BLACK && row == 7);
+
+        if (!promote) {
+            return;
+        }
+
+        int col = pawn.getColumn();
+
+        //always promote to queen for now :DDD
+        Piece promoted = new Piece(PieceType.QUEEN, colour, row, col);
+        board.setField(promoted);
+    }
+
+
+    private boolean hasRookMoved(PieceColour colour, int startRow, int startCol) {
+        for (Move m : movesPlayed) {
+            Piece p = m.getPiece();
+            if (p.getType() == PieceType.ROOK && p.getColour() == colour) {
+                if (m.getFromRow() == startRow && m.getFromCol() == startCol) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean canCastle(Move move, Piece king) {
+        int fromRow = move.getFromRow();
+        int fromCol = move.getFromCol();
+        int toCol   = move.getToCol();
+
+        PieceColour colour = king.getColour();
+
+        //king must be on its home rank
+        int homeRow = (colour == PieceColour.WHITE) ? 7 : 0;
+        if (fromRow != homeRow) {
+            return false;
+        }
+
+        if (fromCol != 4) {
+            return false;
+        }
+
+        //king and rook must not have moved before
+        if (hasKingMoved(colour)) {
+            return false;
+        }
+
+        boolean kingSide = toCol > fromCol; // true = king-side, false = queen-side
+
+        int rookStartCol = kingSide ? 7 : 0;
+        int rookRow      = homeRow;
+
+        Piece rook = board.getPiece(rookRow, rookStartCol);
+        if (rook.getType() != PieceType.ROOK || rook.getColour() != colour) {
+            return false;
+        }
+
+        if (hasRookMoved(colour, rookRow, rookStartCol)) {
+            return false;
+        }
+
+        // squares between king and rook must be empty
+        int step = (rookStartCol > fromCol) ? 1 : -1;
+        for (int c = fromCol + step; c != rookStartCol; c += step) {
+            if (board.getPiece(fromRow, c).getType() != PieceType.EMPTY) {
+                return false;
+            }
+        }
+
+        // king may not be in check now
+        if (isKingInCheck(colour)) {
+            return false;
+        }
+
+        PieceColour attacker = colour.getOtherColour();
+        int kingTargetCol = toCol;
+        int currentCol = fromCol;
+
+        step = (kingTargetCol > fromCol) ? 1 : -1;
+        currentCol += step;
+        while (true) {
+            if (isSquareAttacked(fromRow, currentCol, attacker)) {
+                return false;
+            }
+            if (currentCol == kingTargetCol) {
+                break;
+            }
+            currentCol += step;
+        }
+
+        return true;
     }
 
     private boolean isKingInCheck(PieceColour kingColour) {
@@ -180,7 +313,6 @@ public class Game {
         if (!(Math.abs(directionCol) == 1 && directionRow == direction)) {
             return false;
         }
-        //fixme dont understand
         Move last = movesPlayed.getLast();
         Piece lastPiece = last.getPiece();
 
@@ -192,7 +324,7 @@ public class Game {
         if (last.getToRow() != fromRow) return false;
         return last.getToCol() == toCol;
     }
-    
+
     /**
      * Checks if a king can attack a piece.
      * @param move the move the king wants to play.
@@ -201,7 +333,6 @@ public class Game {
     private boolean isValidForKing(Move move) {
         int rowDifference = Math.abs(move.getToRow() - move.getFromRow());
         int columnDifference = Math.abs(move.getToCol() - move.getFromCol());
-
         //means that a king attacks any square in the 3x3 valid matrix next to him
         return (rowDifference <= 1 && columnDifference <= 1) &&
                 !(rowDifference == 0 && columnDifference == 0); //without his piece ;)
@@ -270,6 +401,13 @@ public class Game {
         int rowDifference = Math.abs(toRow - fromRow);
         int columnDifference = Math.abs(toCol - fromCol);
 
+        Piece king = board.getPiece(fromRow, fromCol);
+
+        // castling: king moves two squares horizontally on same rank
+        if (rowDifference == 0 && columnDifference == 2) {
+            return canCastle(move, king);
+        }
+
         //must move at least one and at most one square
         if (rowDifference == 0 && columnDifference == 0) {
             return false;
@@ -277,8 +415,6 @@ public class Game {
         if (rowDifference > 1 || columnDifference > 1) {
             return false;
         }
-
-        Piece king = board.getPiece(fromRow, fromCol);
 
         //king move is valid only if it does not leave king in check
         return !leavesKingInCheckAfterMove(move, king);
