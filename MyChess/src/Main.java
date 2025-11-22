@@ -2,17 +2,17 @@ import controller.Game;
 import model.Board;
 import model.PieceColour;
 import model.Player;
-import view.GraphicsBoard;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        ImageIcon icon = new ImageIcon(Main.class.getResource("/icon.png"));
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(Main.class.getResource("/icon.png")));
         frame.setIconImage(icon.getImage());
 
         frame.getContentPane().setBackground(Color.black);

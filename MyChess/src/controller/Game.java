@@ -2,7 +2,9 @@ package controller;
 
 import model.*;
 import view.GraphicsBoard;
+import view.PromotionDialog;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -154,12 +156,33 @@ public class Game {
         }
 
         int col = pawn.getColumn();
+        PieceType promotedType = askPromotionType(pawn);
 
-        //always promote to queen for now :DDD
-        Piece promoted = new Piece(PieceType.QUEEN, colour, row, col);
+        Piece promoted = new Piece(promotedType, colour, row, col);
         board.setField(promoted);
     }
 
+    private PieceType askPromotionType(Piece pawn) {
+        java.awt.Window parentWindow =
+                javax.swing.SwingUtilities.getWindowAncestor(view);
+
+        PromotionDialog dialog =
+                new PromotionDialog(parentWindow, pawn.getColour(), view.getTileSize());
+
+        try {
+            Point boardOnScreen = view.getLocationOnScreen();
+            int tile = view.getTileSize();
+
+            int pawnX = boardOnScreen.x + pawn.getColumn() * tile;
+            int pawnY = boardOnScreen.y + pawn.getRow() * tile;
+
+            dialog.setLocation(pawnX, pawnY); //place the dialog on top of that pawn
+        } catch (IllegalComponentStateException ex) {
+            dialog.setLocationRelativeTo(parentWindow);
+        }
+
+        return dialog.selectPieceType();
+    }
 
     private boolean hasRookMoved(PieceColour colour, int startRow, int startCol) {
         for (Move m : movesPlayed) {
