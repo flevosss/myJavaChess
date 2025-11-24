@@ -3,8 +3,11 @@ package controller;
 import model.*;
 import view.GraphicsBoard;
 
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameInputHandler extends MouseAdapter {
 
@@ -23,12 +26,46 @@ public class GameInputHandler extends MouseAdapter {
 
         Piece selected = game.getBoard().getPiece(row, col);
 
-        if (selected != null && selected.getType() != PieceType.EMPTY) {
+        if (selected != null && selected.getType() != PieceType.EMPTY && game.isTurnForPiece(selected)) {
+            calculateTargets(selected);
+
             game.setSelectedPiece(selected);
             graphicsBoard.startDragging(selected, e.getX(), e.getY());
         } else {
             game.setSelectedPiece(null);
             graphicsBoard.stopDragging();
+        }
+    }
+
+    private void calculateTargets(Piece selected) {
+        List<Move> allMoves = game.getValidMoves(selected.getColour());
+        List<Point> targets = new ArrayList<>();
+
+        for (Move m : allMoves) {
+            if (m.getFromRow() == selected.getRow()
+                    && m.getFromCol() == selected.getColumn()) {
+                targets.add(new Point(m.getToCol(), m.getToRow()));
+            }
+        }
+
+        graphicsBoard.setHighlightSquares(targets);
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        int col = e.getX() / graphicsBoard.getTileSize();
+        int row = e.getY() / graphicsBoard.getTileSize();
+
+        Piece selected = game.getBoard().getPiece(row, col);
+
+        if (selected != null && selected.getType() != PieceType.EMPTY && game.isTurnForPiece(selected)) {
+            game.setSelectedPiece(selected);
+
+            calculateTargets(selected);
+        } else {
+            //if its empty square clear
+            game.setSelectedPiece(null);
+            graphicsBoard.clearHighlightSquares();
         }
     }
 
@@ -66,6 +103,7 @@ public class GameInputHandler extends MouseAdapter {
 
         game.doMove(move);
         game.setSelectedPiece(null);
+        graphicsBoard.clearHighlightSquares();
         graphicsBoard.repaint();
     }
 }

@@ -1,6 +1,7 @@
 package controller;
 
 import model.*;
+import view.GameOverDialog;
 import view.GraphicsBoard;
 import view.PromotionDialog;
 
@@ -17,10 +18,8 @@ public class Game {
     private Player currentTurn;
     private final Player player1;
     private final Player player2;
-
     private final List<Move> movesPlayed;
     private boolean kingInCheck;
-
     public boolean isGameOver;
 
     public Game(Player player1, Player player2){
@@ -66,6 +65,10 @@ public class Game {
 
         currentTurn = originalTurn;
         return moves;
+    }
+
+    public boolean isTurnForPiece(Piece piece) {
+        return currentTurn.getPieceColour() == piece.getColour();
     }
 
     public void doMove(Move move) {
@@ -120,10 +123,12 @@ public class Game {
 
         if (kingInCheck && !hasMove) {
             this.isGameOver = true;
-            System.out.println("Checkmate! " + currentTurn + " has no legal moves.");
+            String msg = "Checkmate!\n" + currentTurn + " has no legal moves.";
+            showGameOverDialog(msg);
         } else if (!kingInCheck && !hasMove) {
             this.isGameOver = true;
-            System.out.println("Stalemate! " + currentTurn + " has no legal moves.");
+            String msg = "Stalemate!\n" + currentTurn + " has no legal moves.";
+            showGameOverDialog(msg);
         }
         view.repaint();
     }
@@ -143,13 +148,13 @@ public class Game {
             return;
         }
 
-        int row = pawn.getRow();
+        int pawnRow = pawn.getRow();
         PieceColour colour = pawn.getColour();
 
         //white pawns promote on row 0, black pawns on row 7
         boolean promote =
-                (colour == PieceColour.WHITE && row == 0) ||
-                        (colour == PieceColour.BLACK && row == 7);
+                (colour == PieceColour.WHITE && pawnRow == 0) ||
+                        (colour == PieceColour.BLACK && pawnRow == 7);
 
         if (!promote) {
             return;
@@ -158,8 +163,17 @@ public class Game {
         int col = pawn.getColumn();
         PieceType promotedType = askPromotionType(pawn);
 
-        Piece promoted = new Piece(promotedType, colour, row, col);
+        Piece promoted = new Piece(promotedType, colour, pawnRow, col);
         board.setField(promoted);
+    }
+
+    public void showGameOverDialog(String message) {
+        java.awt.Window parent =
+                javax.swing.SwingUtilities.getWindowAncestor(this.getView());
+
+        GameOverDialog dialog = new GameOverDialog(parent, message);
+        dialog.setLocationRelativeTo(parent); //center on window
+        dialog.setVisible(true);
     }
 
     private PieceType askPromotionType(Piece pawn) {
@@ -614,7 +628,6 @@ public class Game {
             } else {
                 return Math.abs(directionRow) == 1;
             }
-
         }
 
         //check diagonal move
@@ -634,10 +647,8 @@ public class Game {
 
     private void changeTurns() {
         if (currentTurn == player1) {
-            System.out.println("changed turn to" + player2);
             currentTurn = player2;
         } else {
-            System.out.println("changed turn to" + player1);
             currentTurn = player1;
         }
     }

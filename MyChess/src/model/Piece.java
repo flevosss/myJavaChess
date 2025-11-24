@@ -1,6 +1,5 @@
 package model;
 
-
 public class Piece {
     private final PieceType type;
     private final PieceColour colour;
@@ -14,7 +13,6 @@ public class Piece {
         this.column = column;
     }
 
-
     public void setRow(int row){
         this.row = row;
     }
@@ -23,11 +21,21 @@ public class Piece {
         this.column = column;
     }
 
+    public PieceType getType() {
+        return type;
+    }
 
-    public PieceType getType() { return type; }
-    public PieceColour getColour() { return colour; }
-    public int getRow() { return row; }
-    public int getColumn() { return column; }
+    public PieceColour getColour() {
+        return colour;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public int getColumn() { 
+        return column;
+    }
 
     @Override
     public String toString() {

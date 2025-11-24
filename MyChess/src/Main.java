@@ -1,5 +1,4 @@
 import controller.Game;
-import model.Board;
 import model.PieceColour;
 import model.Player;
 

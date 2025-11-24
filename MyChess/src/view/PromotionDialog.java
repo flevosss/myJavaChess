@@ -13,7 +13,7 @@ public class PromotionDialog extends JDialog {
     public PromotionDialog(Window parent, PieceColour colour, int tileSize) {
         super(parent, "Promote pawn", ModalityType.APPLICATION_MODAL); //pause the game until it closes
 
-        setUndecorated(true); //todo: ask again why?
+        setUndecorated(true);
 
         PromotionPanel panel = new PromotionPanel(colour, tileSize, this);
         setContentPane(panel);
