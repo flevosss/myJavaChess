@@ -1,7 +1,9 @@
-package view;
+package view.Panels;
 
 import model.PieceColour;
 import model.PieceType;
+import view.Dialogs.PromotionDialog;
+import view.SpriteSheet;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,7 +1,8 @@
-package view;
+package view.Dialogs;
 
 import model.PieceColour;
 import model.PieceType;
+import view.Panels.PromotionPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,7 +26,7 @@ public class PromotionDialog extends JDialog {
         return selectedType;
     }
 
-    void setSelectedType(PieceType type) {
+    public void setSelectedType(PieceType type) {
         this.selectedType = type;
         dispose();
     }
