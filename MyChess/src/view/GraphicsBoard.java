@@ -50,7 +50,6 @@ public class GraphicsBoard extends JPanel {
         repaint();
     }
 
-
     public void stopDragging() {
         this.draggingPiece = null;
         repaint();
@@ -107,7 +106,7 @@ public class GraphicsBoard extends JPanel {
 
     private void drawHighlights(Graphics2D g2d) {
         Color dotColor = new Color(120, 120, 120, 180);
-        int radius = tileSize / 8;
+        int radius = tileSize / 6;
 
         for (Point p : highlightSquares) {
             int col = p.x;

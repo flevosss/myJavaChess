@@ -16,7 +16,7 @@ public class Game {
     private boolean kingInCheck;
     public boolean isGameOver;
 
-       public Game(Player player1, Player player2){
+    public Game(Player player1, Player player2){
         this.board = new Board(8,8);
         this.player1 = player1;
         this.player2 = player2;
@@ -61,8 +61,8 @@ public class Game {
 
         if (isCastling) {
             boolean kingSide = move.getToCol() > move.getFromCol();
-            int rookFromCol  = kingSide ? 7 : 0;
-            int rookToCol    = kingSide ? move.getToCol()  - 1 : move.getToCol()  + 1;
+            int rookFromCol = kingSide ? 7 : 0;
+            int rookToCol = kingSide ? move.getToCol()  - 1 : move.getToCol()  + 1;
 
             Piece rook = board.getPiece(move.getToRow(), rookFromCol);
             board.removeField(move.getToRow(), rookFromCol);
