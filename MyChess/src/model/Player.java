@@ -1,7 +1,5 @@
 package model;
 
-import controller.Game;
-
 public class Player {
 
     private final String name;

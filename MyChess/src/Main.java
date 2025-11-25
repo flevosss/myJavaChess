@@ -1,33 +1,27 @@
-import controller.Game;
+import controller.GameController;
 import model.PieceColour;
 import model.Player;
 
 import javax.swing.*;
-import java.awt.*;
-import java.util.Objects;
 
 public class Main {
+
     public static void main(String[] args) {
-        JFrame frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        ImageIcon icon = new ImageIcon(Objects.requireNonNull(Main.class.getResource("/icon.png")));
-        frame.setIconImage(icon.getImage());
+        SwingUtilities.invokeLater(() -> {
+            Player white = new Player("White", PieceColour.WHITE);
+            Player black = new Player("Black", PieceColour.BLACK);
 
-        frame.getContentPane().setBackground(Color.black);
+            GameController controller = new GameController(white, black);
 
-        frame.setLayout(new GridBagLayout());
+            JFrame window = new JFrame("Chess");
+            window.setResizable(false);
+            window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        frame.setMinimumSize(new Dimension(1000, 1000));
-        frame.setLocationRelativeTo(null);
-
-        Player player1 = new Player("mike", PieceColour.WHITE);
-        Player player2 = new Player("zoe", PieceColour.BLACK);
-
-        Game game = new Game(player1, player2);
-
-        frame.add(game.getView());
-
-        frame.setVisible(true);
+            window.add(controller.getView());
+            window.pack();
+            window.setLocationRelativeTo(null);
+            window.setVisible(true);
+        });
     }
 }

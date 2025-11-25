@@ -1,29 +1,22 @@
-package controller;
+package model;
 
-import model.*;
-import view.Dialogs.GameOverDialog;
-import view.GraphicsBoard;
-import view.Dialogs.PromotionDialog;
-
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Game {
     private final Board board;
-    private final GraphicsBoard view;
 
-    private Piece selectedPiece;
-
-    private Player currentTurn;
     private final Player player1;
     private final Player player2;
+    private Player currentTurn;
+
     private final List<Move> movesPlayed;
+    private final ChessRules chessRules;
+
     private boolean kingInCheck;
     public boolean isGameOver;
-    private ChessRules chessRules;
 
-    public Game(Player player1, Player player2){
+       public Game(Player player1, Player player2){
         this.board = new Board(8,8);
         this.player1 = player1;
         this.player2 = player2;
@@ -31,15 +24,9 @@ public class Game {
 
         this.isGameOver = false;
         this.kingInCheck = false;
+
         this.chessRules = new ChessRules(this);
-
-        movesPlayed = new ArrayList<>();
-
-        view = new GraphicsBoard(board,85);
-        GameInputHandler gameInputHandler = new GameInputHandler(this, view);
-
-        view.addMouseListener(gameInputHandler);
-        view.addMouseMotionListener(gameInputHandler);
+        this.movesPlayed = new ArrayList<>();
     }
 
     public void doMove(Move move) {
@@ -71,7 +58,6 @@ public class Game {
         pieceTobeMoved.setColumn(move.getToCol());
         board.setField(pieceTobeMoved);
 
-        handlePawnPromotion(pieceTobeMoved);
 
         if (isCastling) {
             boolean kingSide = move.getToCol() > move.getFromCol();
@@ -92,16 +78,25 @@ public class Game {
 
         boolean hasMove = !getValidMoves(currentTurn.getPieceColour()).isEmpty();
 
-        if (kingInCheck && !hasMove) {
-            this.isGameOver = true;
-            String msg = "Checkmate!\n" + currentTurn + " has no legal moves.";
-            showGameOverDialog(msg);
-        } else if (!kingInCheck && !hasMove) {
-            this.isGameOver = true;
-            String msg = "Stalemate!\n" + currentTurn + " has no legal moves.";
-            showGameOverDialog(msg);
+        if ((kingInCheck && !hasMove) || (!kingInCheck && !hasMove)) {
+            isGameOver = true;
         }
-        view.repaint();
+    }
+
+    public boolean needsPromotion(Piece piece) {
+        if (piece == null) return false;
+        if (piece.getType() != PieceType.PAWN) return false;
+
+        PieceColour colour = piece.getColour();
+        int row = piece.getRow();
+
+        return (colour == PieceColour.WHITE && row == 0) ||
+                (colour == PieceColour.BLACK && row == 7);
+    }
+
+    public void promotePawn(Piece pawn, PieceType newType) {
+        Piece promoted = new Piece(newType, pawn.getColour(), pawn.getRow(), pawn.getColumn());
+        board.setField(promoted);
     }
 
     public List<Move> getValidMoves(PieceColour colour){
@@ -130,71 +125,6 @@ public class Game {
         currentTurn = originalTurn;
         return moves;
     }
-    private void handlePawnPromotion(Piece pawn) {
-        if (pawn.getType() != PieceType.PAWN) {
-            return;
-        }
-
-        int pawnRow = pawn.getRow();
-        PieceColour colour = pawn.getColour();
-
-        //white pawns promote on row 0, black pawns on row 7
-        boolean promote =
-                (colour == PieceColour.WHITE && pawnRow == 0) ||
-                        (colour == PieceColour.BLACK && pawnRow == 7);
-
-        if (!promote) {
-            return;
-        }
-
-        int col = pawn.getColumn();
-        PieceType promotedType = askPromotionType(pawn);
-
-        Piece promoted = new Piece(promotedType, colour, pawnRow, col);
-        board.setField(promoted);
-    }
-    private PieceType askPromotionType(Piece pawn) {
-        java.awt.Window parentWindow =
-                javax.swing.SwingUtilities.getWindowAncestor(view);
-
-        PromotionDialog dialog =
-                new PromotionDialog(parentWindow, pawn.getColour(), view.getTileSize());
-
-        try {
-            Point boardOnScreen = view.getLocationOnScreen();
-            int tile = view.getTileSize();
-
-            int pawnX = boardOnScreen.x + pawn.getColumn() * tile;
-            int pawnY = boardOnScreen.y + pawn.getRow() * tile;
-
-            dialog.setLocation(pawnX, pawnY); //place the dialog on top of that pawn
-        } catch (IllegalComponentStateException ex) {
-            dialog.setLocationRelativeTo(parentWindow);
-        }
-
-        return dialog.selectPieceType();
-    }
-
-    public boolean isTurnForPiece(Piece piece) {
-        return currentTurn.getPieceColour() == piece.getColour();
-    }
-
-    public List<Move> getMovesPlayed() {
-        return this.movesPlayed;
-    }
-
-    public Player getCurrentTurn () {
-        return this.currentTurn;
-    }
-
-    public void showGameOverDialog(String message) {
-        java.awt.Window parent =
-                javax.swing.SwingUtilities.getWindowAncestor(this.getView());
-
-        GameOverDialog dialog = new GameOverDialog(parent, message);
-        dialog.setLocationRelativeTo(parent); //center on window
-        dialog.setVisible(true);
-    }
 
     private void changeTurns() {
         if (currentTurn == player1) {
@@ -214,20 +144,24 @@ public class Game {
         return null;
     }
 
+    public boolean isKingInCheck() {
+        return kingInCheck;
+    }
+
+    public boolean isTurnForPiece(Piece piece) {
+        return currentTurn.getPieceColour() == piece.getColour();
+    }
+
+    public List<Move> getMovesPlayed() {
+        return this.movesPlayed;
+    }
+
+    public Player getCurrentTurn () {
+        return this.currentTurn;
+    }
+
     public Board getBoard() {
         return this.board;
-    }
-
-    public GraphicsBoard getView(){
-        return this.view;
-    }
-
-    public void setSelectedPiece(Piece piece) {
-        this.selectedPiece = piece;
-    }
-
-    public Piece getSelectedPiece(){
-        return this.selectedPiece;
     }
 
     public boolean isGameOver() {
