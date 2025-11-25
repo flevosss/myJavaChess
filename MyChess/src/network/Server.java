@@ -74,9 +74,10 @@ public class Server implements Runnable {
             ClientHandler player1 = gameQueue.poll();
             ClientHandler player2 = gameQueue.poll();
 
-            //creating a new thread for a new game handler each time.
-            assert player2 != null;
-            assert player1 != null;
+            if (player1 == null || player2 == null) {
+                System.out.println("[S] One of the two players is null");
+                continue;
+            }
 
             new Thread(new GameHandler(player1, player2),
                     "gameHandlerThread").start();
