@@ -1,7 +1,7 @@
 package model;
 
 public enum PieceColour {
-    BLACK, WHITE, EMPTY;
+    BLACK, WHITE, EMPTY, NOT_ASSIGNED;
 
     public PieceColour getOtherColour() {
         if (this == BLACK) {

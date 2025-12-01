@@ -3,7 +3,7 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Board{
+public class Board {
 
     public final Piece[][] pieces;
     private final int columns;

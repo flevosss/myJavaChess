@@ -5,20 +5,14 @@ public class Move {
     private final int fromCol;
     private final int toRow;
     private final int toCol;
-    private final Piece piece;
 
     private boolean enPassant = false;
 
-    public Move (int fromRow, int fromCol, int toRow, int toCol, Piece piece){
+    public Move (int fromRow, int fromCol, int toRow, int toCol) {
         this.fromCol = fromCol;
         this.fromRow = fromRow;
         this.toRow = toRow;
         this.toCol = toCol;
-        this.piece = piece;
-    }
-
-    public Piece getPiece() {
-        return this.piece;
     }
 
     public int getFromRow() {

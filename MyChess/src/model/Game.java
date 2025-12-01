@@ -7,7 +7,11 @@ public class Game {
     private final Board board;
 
     private final Player player1;
+    private boolean hasBlackKingMoved;
+
     private final Player player2;
+    private boolean hasWhiteKingMoved;
+
     private Player currentTurn;
 
     private final List<Move> movesPlayed;
@@ -16,7 +20,7 @@ public class Game {
     private boolean kingInCheck;
     public boolean isGameOver;
 
-    public Game(Player player1, Player player2){
+    public Game(Player player1, Player player2) {
         this.board = new Board(8,8);
         this.player1 = player1;
         this.player2 = player2;
@@ -24,6 +28,8 @@ public class Game {
 
         this.isGameOver = false;
         this.kingInCheck = false;
+        this.hasBlackKingMoved = false;
+        this.hasWhiteKingMoved = false;
 
         this.chessRules = new ChessRules(this);
         this.movesPlayed = new ArrayList<>();
@@ -49,15 +55,21 @@ public class Game {
             board.removeField(capturedRow, capturedCol);
         }
 
+        if (pieceTobeMoved.getType() == PieceType.KING) {
+            if (pieceTobeMoved.getColour() == PieceColour.WHITE) {
+                hasWhiteKingMoved = true;
+            } else if (pieceTobeMoved.getColour() == PieceColour.BLACK) {
+                hasWhiteKingMoved = true;
+            }
+        }
+
         boolean isCastling = pieceTobeMoved.getType() == PieceType.KING
                 && move.getFromRow() == move.getToRow()
                 && Math.abs(move.getToCol() - move.getFromCol()) == 2;
 
-
         pieceTobeMoved.setRow(move.getToRow());
         pieceTobeMoved.setColumn(move.getToCol());
         board.setField(pieceTobeMoved);
-
 
         if (isCastling) {
             boolean kingSide = move.getToCol() > move.getFromCol();
@@ -99,7 +111,7 @@ public class Game {
         board.setField(promoted);
     }
 
-    public List<Move> getValidMoves(PieceColour colour){
+    public List<Move> getValidMoves(PieceColour colour) {
         Player originalTurn = currentTurn;
         currentTurn = getPlayerFromPiece(colour);
 
@@ -113,7 +125,7 @@ public class Game {
 
                 for (int toRow = 0; toRow < board.getRows(); toRow++) {
                     for (int toCol = 0; toCol < board.getColumns(); toCol++) {
-                        Move m = new Move(fromRow, fromCol, toRow, toCol, p);
+                        Move m = new Move(fromRow, fromCol, toRow, toCol);
                         if (chessRules.isValidMove(m)) {
                             moves.add(m);
                         }
@@ -166,5 +178,13 @@ public class Game {
 
     public boolean isGameOver() {
         return this.isGameOver;
+    }
+
+    public boolean hasBlackKingMoved () {
+        return this.hasBlackKingMoved;
+    }
+
+    public boolean hasWhiteKingMoved() {
+        return this.hasWhiteKingMoved;
     }
 }

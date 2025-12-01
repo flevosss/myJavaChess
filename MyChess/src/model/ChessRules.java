@@ -11,18 +11,16 @@ public class ChessRules {
     }
 
     private boolean hasKingMoved(PieceColour colour) {
-        for (Move m : game.getMovesPlayed()) {
-            Piece p = m.getPiece();
-            if (p.getType() == PieceType.KING && p.getColour() == colour) {
-                return true;
-            }
-        }
-        return false;
+       if (colour == PieceColour.WHITE) {
+           return game.hasWhiteKingMoved();
+       } else {
+           return game.hasBlackKingMoved();
+       }
     }
 
     private boolean hasRookMoved(PieceColour colour, int startRow, int startCol) {
         for (Move m : game.getMovesPlayed()) {
-            Piece p = m.getPiece();
+            Piece p = game.getBoard().getPiece(startRow, startCol);
             if (p.getType() == PieceType.ROOK && p.getColour() == colour) {
                 if (m.getFromRow() == startRow && m.getFromCol() == startCol) {
                     return true;
@@ -124,7 +122,7 @@ public class ChessRules {
                 if (p.getType() == PieceType.EMPTY) continue;
                 if (p.getColour() != byColour) continue;
                 //fake the move
-                Move pseudo = new Move(row, col, targetRow, targetCol, p);
+                Move pseudo = new Move(row, col, targetRow, targetCol);
                 //and now check if any of these can land on my piece
                 switch (p.getType()) {
                     case PAWN -> {
@@ -179,7 +177,7 @@ public class ChessRules {
             return false;
         }
         Move last = movesPlayed.getLast();
-        Piece lastPiece = last.getPiece();
+        Piece lastPiece = game.getBoard().getPiece(last.getToRow(), last.getToCol());
 
         //last move must be enemy pawn double step
         if (lastPiece.getType() != PieceType.PAWN) return false;

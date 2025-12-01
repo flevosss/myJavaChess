@@ -57,6 +57,10 @@ public class Server implements Runnable {
         }
     }
 
+    public synchronized void challenge() {
+
+    }
+
     /**
      * Synchronized method to wait in the queue
      */
@@ -85,16 +89,8 @@ public class Server implements Runnable {
     }
 
     /**
-     * Sending the protocol message for the handshake to the client.
-     * @return HELLO~SERVER BY ORANGE 15
-     */
-    public String sendHello() {
-        return Protocol.serverSendHello();
-    }
-
-    /**
      * Method to be called by the client handler to
-     * place a client to the queue.
+     * put a client to the queue.
      * @param client the client to be added to the queue.
      */
     public synchronized void addClientToQueue(ClientHandler client) {

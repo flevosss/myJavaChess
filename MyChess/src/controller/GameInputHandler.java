@@ -101,8 +101,7 @@ public class GameInputHandler extends MouseAdapter {
                 selectedPiece.getRow(),
                 selectedPiece.getColumn(),
                 targetRow,
-                targetCol,
-                selectedPiece
+                targetCol
         );
 
         controller.handleMove(move);
