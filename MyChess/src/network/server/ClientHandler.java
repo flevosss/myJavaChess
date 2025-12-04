@@ -1,6 +1,7 @@
-package network;
+package network.server;
 
 import model.*;
+import network.Protocol;
 
 import java.io.*;
 import java.net.Socket;
