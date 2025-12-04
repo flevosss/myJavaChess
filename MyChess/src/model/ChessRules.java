@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChessRules {
-    private Game game;
+    private final Game game;
 
     public ChessRules(Game game) {
         this.game = game;

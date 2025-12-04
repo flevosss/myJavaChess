@@ -1,7 +1,7 @@
 package controller;
 
 import model.*;
-import view.GraphicsBoard;
+import view.Panels.GraphicsBoard;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;

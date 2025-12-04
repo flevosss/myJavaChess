@@ -3,7 +3,7 @@ package controller;
 import model.*;
 import view.Dialogs.GameOverDialog;
 import view.Dialogs.PromotionDialog;
-import view.GraphicsBoard;
+import view.Panels.GraphicsBoard;
 
 import java.awt.*;
 
@@ -11,9 +11,9 @@ public class GameController {
     private final Game game;
     private final GraphicsBoard view;
 
-    public GameController(Player p1, Player p2) {
-        this.game = new Game(p1, p2);
-        this.view = new GraphicsBoard(game.getBoard(), 85);
+    public GameController(Game game) {
+        this.game = game;
+        this.view = view;
 
         GameInputHandler input = new GameInputHandler(this, view);
         view.addMouseListener(input);

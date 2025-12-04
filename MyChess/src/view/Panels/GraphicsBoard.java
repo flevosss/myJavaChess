@@ -1,8 +1,9 @@
-package view;
+package view.Panels;
 
 import model.Board;
 import model.Piece;
 import model.PieceType;
+import view.SpriteSheet;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,7 +27,7 @@ public class GraphicsBoard extends JPanel {
 
     private List<Point> highlightSquares;
 
-    public GraphicsBoard(Board board, int tileSize){
+    public GraphicsBoard(Board board, int tileSize) {
         this.tileSize = tileSize;
         this.setPreferredSize(
                 new Dimension(

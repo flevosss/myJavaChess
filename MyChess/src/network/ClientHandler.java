@@ -34,8 +34,6 @@ public class ClientHandler implements Runnable {
         }
     }
 
-
-
     public void handleClientMessage(String clientInput) {
         String [] parts = clientInput.split("~");
         String command = parts[0];
@@ -50,7 +48,7 @@ public class ClientHandler implements Runnable {
             }
 
             case "QUEUE" -> {
-
+                handleQueue();
             }
 
             case "LIST" -> {
@@ -62,6 +60,10 @@ public class ClientHandler implements Runnable {
             }
         }
     }
+    public void handleQueue() {
+        server.addClientToQueue(this);
+    }
+
     public String sendHello() {
         return Protocol.serverSendHello();
     }
