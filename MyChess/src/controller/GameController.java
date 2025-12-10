@@ -13,7 +13,7 @@ public class GameController {
 
     public GameController(Game game) {
         this.game = game;
-        this.view = view;
+        this.view = new GraphicsBoard(game.getBoard(), 85);
 
         GameInputHandler input = new GameInputHandler(this, view);
         view.addMouseListener(input);

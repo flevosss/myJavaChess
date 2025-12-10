@@ -1,8 +1,4 @@
-import controller.GameController;
-import model.Game;
-import model.PieceColour;
-import model.Player;
-import view.Panels.GraphicsBoard;
+import view.Panels.MainPanel;
 
 import javax.swing.*;
 
@@ -10,17 +6,13 @@ public class Main {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            Player white = new Player("White", PieceColour.WHITE);
-            Player black = new Player("Black", PieceColour.BLACK);
-
-            Game game = new Game(white,black);
-            GameController controller = new GameController(game);
-            //, new GraphicsBoard(game.getBoard(), 85)
-            JFrame window = new JFrame("Chess");
+            JFrame window = new JFrame("Chess by fl3v0s");
             window.setResizable(false);
             window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-            window.add(controller.getView());
+            MainPanel mainPanel = new MainPanel(700,1200);
+            window.add(mainPanel);
+
             window.pack();
             window.setLocationRelativeTo(null);
             window.setVisible(true);
