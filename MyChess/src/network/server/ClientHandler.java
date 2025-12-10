@@ -40,12 +40,12 @@ public class ClientHandler implements Runnable {
         String command = parts[0];
 
         switch (command){
-            case "HELLO" -> {
-                handleHello(parts);
+            case "LOGIN" -> {
+                handleLogin(parts);
             }
 
             case "CHALLENGE" -> {
-
+                // TODO: implement challenge functionality
             }
 
             case "QUEUE" -> {
@@ -53,25 +53,26 @@ public class ClientHandler implements Runnable {
             }
 
             case "LIST" -> {
-
+                // TODO: implement list functionality
             }
 
             case "MOVE" -> {
-                handleNewMove(parts);
+                handleMove(parts);
             }
         }
     }
     public void handleQueue() {
+        if (username == null) {
+            sendError("You must login first");
+            return;
+        }
         server.addClientToQueue(this);
+        System.out.println("[S]" + username + " joined the queue");
     }
 
-    public String sendHello() {
-        return Protocol.serverSendHello();
-    }
-
-    private void handleNewMove(String [] input) {
-        if (input.length < 2) {
-            sendError("Move index is not provided");
+    private void handleMove(String [] input) {
+        if (input.length < 5) {
+            sendError("Invalid move format");
             return;
         }
         if (this.currentGame == null) {
@@ -79,30 +80,51 @@ public class ClientHandler implements Runnable {
             return;
         }
 
-        //MOVE~<fromCol>~<fromRow>~<toRow>~<ToCol>
-//        Piece piece =
-//        Move move = new Move(input[1], input[2], input[3], input[4], );
-//        this.currentGame.handleMove(move, this);
+        try {
+            int fromRow = Integer.parseInt(input[1]);
+            int fromCol = Integer.parseInt(input[2]);
+            int toRow = Integer.parseInt(input[3]);
+            int toCol = Integer.parseInt(input[4]);
+            
+            Move move = new Move(fromRow, fromCol, toRow, toCol);
+            currentGame.handleMove(move, this);
+        } catch (NumberFormatException e) {
+            sendError("Invalid move coordinates");
+        }
     }
 
-    public String getName() {
-        return this.username;
-    }
-
-    public boolean verifyMove() {
-        return false;
-    }
-
-    private void handleHello(String [] input) {
+    private void handleLogin(String [] input) {
         if (input.length < 2) {
             sendError("Username is not provided");
             return;
         }
         this.username = input[1];
+        out.println(Protocol.serverSendHello());
+        System.out.println("[S]" + username + " logged in");
     }
 
     private void sendError(String message) {
         out.println(Protocol.sendErrorToClient(message));
+    }
+    
+    public void sendMessage(String message) {
+        out.println(message);
+    }
+    
+    public void setGame(GameHandler game) {
+        this.currentGame = game;
+    }
+    
+    public void setColour(PieceColour colour) {
+        this.colour = colour;
+    }
+    
+    public PieceColour getColour() {
+        return this.colour;
+    }
+    
+    public String getName() {
+        return this.username;
     }
 
     @Override
