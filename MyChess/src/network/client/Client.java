@@ -12,15 +12,15 @@ public class Client {
 
     private Socket socket;
     private PrintWriter writer;
-    private ServerHandler serverHandler; //what the server sends me
+    private ServerHandler serverHandler; 
+    private ClientGame currentGame;
+    private String username;
 
     public void connect (InetAddress address, int port) {
         try {
             this.socket = new Socket(address, port);
-            this.writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+            this.writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
             this.serverHandler = new ServerHandler(this);
-
-            handleMessage("hello");
         } catch (IOException a) {
             //if we cant establish a connection
             System.out.println("[C]Couldn't connect to the server" + "\n");
@@ -44,7 +44,8 @@ public class Client {
             System.out.println("[C]You haven't specified your username!"
                     + "\n");
         } else {
-            writer.write(Protocol.sendLogin(parts[1]));
+            this.username = parts[1];
+            writer.println(Protocol.sendLogin(parts[1]));
         }
     }
 
@@ -54,27 +55,34 @@ public class Client {
             return;
         }
 
-        writer.write(Protocol.sendChallengeTo(parts[2], Integer.parseInt(parts[4])));
+        writer.println(Protocol.sendChallengeTo(parts[2], Integer.parseInt(parts[4])));
     }
 
     private void sendQueue() {
-        writer.write(Protocol.sendQueue());
+        writer.println(Protocol.sendQueue());
     }
 
     private void sendList(){
-        writer.write(Protocol.sendList());
+        writer.println(Protocol.sendList());
     }
 
     private void sendNewMove(String [] parts){
-        if (parts.length < 4) {
+        if (parts.length < 5) {
             System.out.println("not enough parameters");
             return;
         }
-//        if (this.game == null) {
-//            System.out.println("you have to join a game to send a move!");
-//        }
-//
-//        writer.write(Protocol.sendMove(move));
+        if (this.currentGame == null) {
+            System.out.println("you have to join a game to send a move!");
+            return;
+        }
+        
+        int fromRow = Integer.parseInt(parts[1]);
+        int fromCol = Integer.parseInt(parts[2]);
+        int toRow = Integer.parseInt(parts[3]);
+        int toCol = Integer.parseInt(parts[4]);
+        
+        Move move = new Move(fromRow, fromCol, toRow, toCol);
+        writer.println(Protocol.sendMove(move));
     }
 
     private void handleMessage(String message) {
@@ -107,10 +115,24 @@ public class Client {
     public Socket getSocket() {
         return this.socket;
     }
-
-    private void serverHandleNewGame (String [] parts) {
-        if (parts.length < 2) {
-
+    
+    public void setCurrentGame(ClientGame game) {
+        this.currentGame = game;
+    }
+    
+    public ClientGame getCurrentGame() {
+        return this.currentGame;
+    }
+    
+    public String getUsername() {
+        return this.username;
+    }
+    
+    public void sendMove(Move move) {
+        if (currentGame == null) {
+            System.out.println("[C]Not in a game");
+            return;
         }
+        writer.println(Protocol.sendMove(move));
     }
 }

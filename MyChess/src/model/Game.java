@@ -111,6 +111,10 @@ public class Game {
         board.setField(promoted);
     }
 
+    public boolean isValidMove(Move move) {
+        return chessRules.isValidMove(move);
+    }
+
     public List<Move> getValidMoves(PieceColour colour) {
         Player originalTurn = currentTurn;
         currentTurn = getPlayerFromPiece(colour);
