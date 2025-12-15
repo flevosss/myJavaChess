@@ -7,13 +7,13 @@ import view.Panels.GraphicsBoard;
 
 import java.awt.*;
 
-public class GameController {
-    private final Game game;
-    private final GraphicsBoard view;
+public class GameController implements IGameController {
+    protected final Game game;
+    protected final GraphicsBoard view;
 
     public GameController(Game game) {
         this.game = game;
-        this.view = new GraphicsBoard(game.getBoard(), 85);
+        this.view = new GraphicsBoard(game.getBoard(), 88);
 
         GameInputHandler input = new GameInputHandler(this, view);
         view.addMouseListener(input);
@@ -22,7 +22,19 @@ public class GameController {
 
     public void handleMove(Move move) {
         game.doMove(move);
+        afterMoveApplied(move);
+    }
 
+    protected void showGameOverDialog(String message, String winner) {
+        java.awt.Window parent =
+                javax.swing.SwingUtilities.getWindowAncestor(this.getView());
+
+        GameOverDialog dialog = new GameOverDialog(parent, message, winner);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+    }
+
+    protected void afterMoveApplied(Move move) {
         Piece moved = game.getBoard().getPiece(move.getToRow(), move.getToCol());
 
         if (game.needsPromotion(moved)) {
@@ -30,51 +42,21 @@ public class GameController {
             game.promotePawn(moved, choice);
         }
 
+        view.repaint();
+
         if (game.isGameOver()) {
             String msg;
             if (game.isKingInCheck()) {
-                msg = "Checkmate!\n" + game.getCurrentTurn() + " has no legal moves.";
+                msg = "Checkmate!\n";
+                showGameOverDialog(msg, game.getBoard().getPiece(move.getToRow(), move.getToCol()).getColour().toString());
             } else {
-                msg = "Stalemate!\n" + game.getCurrentTurn() + " has no legal moves.";
+                msg = "Stalemate!\n";
+                showGameOverDialog(msg, null);
             }
-            showGameOverDialog(msg);
         }
-
-        view.repaint();
     }
 
-    private void handlePawnPromotion(Piece pawn) {
-        if (pawn.getType() != PieceType.PAWN) {
-            return;
-        }
-
-        int pawnRow = pawn.getRow();
-        PieceColour colour = pawn.getColour();
-
-        //white pawns promote on row 0, black pawns on row 7
-        boolean promote =
-                (colour == PieceColour.WHITE && pawnRow == 0) ||
-                        (colour == PieceColour.BLACK && pawnRow == 7);
-
-        if (!promote) {
-            return;
-        }
-
-        PieceType newType = askPromotionType(pawn);
-
-        game.promotePawn(pawn, newType);
-    }
-
-    public void showGameOverDialog(String message) {
-        java.awt.Window parent =
-                javax.swing.SwingUtilities.getWindowAncestor(this.getView());
-
-        GameOverDialog dialog = new GameOverDialog(parent, message);
-        dialog.setLocationRelativeTo(parent);
-        dialog.setVisible(true);
-    }
-
-    private PieceType askPromotionType(Piece pawn) {
+    protected PieceType askPromotionType(Piece pawn) {
         java.awt.Window parentWindow =
                 javax.swing.SwingUtilities.getWindowAncestor(view);
 
@@ -102,5 +84,10 @@ public class GameController {
 
     public Game getGame() {
         return game;
+    }
+
+    @Override
+    public boolean canSelectPiece(Piece piece) {
+        return true;
     }
 }

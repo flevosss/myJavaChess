@@ -19,6 +19,7 @@ public class GraphicsBoard extends JPanel {
     private int dragX, dragY;
 
     private List<Point> highlightSquares = new ArrayList<>();
+    private Point selectedSquare;
 
     private boolean flipped = false;
 
@@ -30,19 +31,6 @@ public class GraphicsBoard extends JPanel {
                 board.getColumns() * tileSize,
                 board.getRows() * tileSize
         ));
-    }
-
-    public void setFlipped(boolean flipped) {
-        this.flipped = flipped;
-        repaint();
-    }
-
-    private int viewRow(int boardRow) {
-        return flipped ? board.getRows() - 1 - boardRow : boardRow;
-    }
-
-    private int viewCol(int boardCol) {
-        return flipped ? board.getColumns() - 1 - boardCol : boardCol;
     }
 
     public Point screenToBoard(int x, int y) {
@@ -69,17 +57,12 @@ public class GraphicsBoard extends JPanel {
         repaint();
     }
 
-    public void stopDragging() {
-        draggingPiece = null;
-        repaint();
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        // Tiles
+        //Tiles
         for (int row = 0; row < board.getRows(); row++) {
             for (int col = 0; col < board.getColumns(); col++) {
 
@@ -99,9 +82,10 @@ public class GraphicsBoard extends JPanel {
             }
         }
 
+        drawSelectedSquare(g2d);
         drawHighlights(g2d);
 
-        // Pieces
+        //Pieces
         for (int row = 0; row < board.getRows(); row++) {
             for (int col = 0; col < board.getColumns(); col++) {
 
@@ -146,6 +130,22 @@ public class GraphicsBoard extends JPanel {
         }
     }
 
+    private void drawSelectedSquare(Graphics2D g2d) {
+        if (selectedSquare == null) return;
+
+        int row = selectedSquare.y;
+        int col = selectedSquare.x;
+
+        int vRow = viewRow(row);
+        int vCol = viewCol(col);
+
+        g2d.setColor(new Color(255, 255, 100, 80));
+        g2d.fillRect(vCol * tileSize, vRow * tileSize, tileSize, tileSize);
+        g2d.setColor(new Color(255, 255, 0, 200));
+        g2d.setStroke(new BasicStroke(3));
+        g2d.drawRect(vCol * tileSize, vRow * tileSize, tileSize - 1, tileSize - 1);
+    }
+
     private void drawHighlights(Graphics2D g2d) {
         Color dotColor = new Color(120, 120, 120, 180);
         int radius = tileSize / 6;
@@ -188,6 +188,24 @@ public class GraphicsBoard extends JPanel {
         }
     }
 
+    public void stopDragging() {
+        draggingPiece = null;
+        repaint();
+    }
+
+    public void setFlipped(boolean flipped) {
+        this.flipped = flipped;
+        repaint();
+    }
+
+    private int viewRow(int boardRow) {
+        return flipped ? board.getRows() - 1 - boardRow : boardRow;
+    }
+
+    private int viewCol(int boardCol) {
+        return flipped ? board.getColumns() - 1 - boardCol : boardCol;
+    }
+
     public void setHighlightSquares(List<Point> squares) {
         highlightSquares = squares;
         repaint();
@@ -195,6 +213,16 @@ public class GraphicsBoard extends JPanel {
 
     public void clearHighlightSquares() {
         highlightSquares.clear();
+        repaint();
+    }
+
+    public void setSelectedSquare(Point square) {
+        selectedSquare = square;
+        repaint();
+    }
+
+    public void clearSelectedSquare() {
+        selectedSquare = null;
         repaint();
     }
 
