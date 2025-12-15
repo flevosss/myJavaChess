@@ -11,12 +11,12 @@ import java.util.List;
 
 public class GameInputHandler extends MouseAdapter {
 
-    private final GameController controller;
+    private final IGameController controller;
     private final GraphicsBoard graphicsBoard;
 
     private Piece selectedPiece;
 
-    public GameInputHandler(GameController controller, GraphicsBoard graphicsBoard) {
+    public GameInputHandler(IGameController controller, GraphicsBoard graphicsBoard) {
         this.controller = controller;
         this.graphicsBoard = graphicsBoard;
     }
@@ -27,60 +27,61 @@ public class GameInputHandler extends MouseAdapter {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        int col = e.getX() / graphicsBoard.getTileSize();
-        int row = e.getY() / graphicsBoard.getTileSize();
+        Point boardPt = graphicsBoard.screenToBoard(e.getX(), e.getY());
+        int col = boardPt.x;
+        int row = boardPt.y;
+
+        // bounds safety
+        if (row < 0 || row >= getGame().getBoard().getRows() ||
+                col < 0 || col >= getGame().getBoard().getColumns()) {
+            clearSelection();
+            return;
+        }
 
         Piece clicked = getGame().getBoard().getPiece(row, col);
 
-        if (clicked != null && clicked.getType() != PieceType.EMPTY && getGame().isTurnForPiece(clicked)) {
-            selectedPiece = clicked;
+        if (clicked != null
+                && clicked.getType() != PieceType.EMPTY
+                && getGame().isTurnForPiece(clicked)
+                && controller.canSelectPiece(clicked)) {
 
+            selectedPiece = clicked;
             calculateTargets(selectedPiece);
             graphicsBoard.startDragging(selectedPiece, e.getX(), e.getY());
         } else {
-            selectedPiece = null;
-            graphicsBoard.stopDragging();
-            graphicsBoard.clearHighlightSquares();
+            clearSelection();
         }
-    }
-
-    private void calculateTargets(Piece selected) {
-        List<Move> allMoves = getGame().getValidMoves(selected.getColour());
-        List<Point> targets = new ArrayList<>();
-
-        for (Move m : allMoves) {
-            if (m.getFromRow() == selected.getRow()
-                    && m.getFromCol() == selected.getColumn()) {
-                targets.add(new Point(m.getToCol(), m.getToRow()));
-            }
-        }
-
-        graphicsBoard.setHighlightSquares(targets);
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        int col = e.getX() / graphicsBoard.getTileSize();
-        int row = e.getY() / graphicsBoard.getTileSize();
+        Point boardPt = graphicsBoard.screenToBoard(e.getX(), e.getY());
+        int col = boardPt.x;
+        int row = boardPt.y;
 
-        Piece selected = getGame().getBoard().getPiece(row, col);
+        if (row < 0 || row >= getGame().getBoard().getRows() ||
+                col < 0 || col >= getGame().getBoard().getColumns()) {
+            clearSelection();
+            return;
+        }
 
-        if (selected != null && selected.getType() != PieceType.EMPTY && getGame().isTurnForPiece(selected)) {
-            selectedPiece = selected;
+        Piece clicked = getGame().getBoard().getPiece(row, col);
+
+        if (clicked != null
+                && clicked.getType() != PieceType.EMPTY
+                && getGame().isTurnForPiece(clicked)
+                && controller.canSelectPiece(clicked)) {
+
+            selectedPiece = clicked;
             calculateTargets(selectedPiece);
         } else {
-            //if its empty square clear
-            selectedPiece = null;
-            graphicsBoard.clearHighlightSquares();
+            clearSelection();
         }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (selectedPiece == null || selectedPiece.getType() == PieceType.EMPTY) {
-            return;
-        }
-
+        if (selectedPiece == null || selectedPiece.getType() == PieceType.EMPTY) return;
         graphicsBoard.updateDragging(e.getX(), e.getY());
     }
 
@@ -93,9 +94,16 @@ public class GameInputHandler extends MouseAdapter {
 
         graphicsBoard.stopDragging();
 
-        int tile = graphicsBoard.getTileSize();
-        int targetCol = e.getX() / tile;
-        int targetRow = e.getY() / tile;
+        Point boardPt = graphicsBoard.screenToBoard(e.getX(), e.getY());
+        int targetCol = boardPt.x;
+        int targetRow = boardPt.y;
+
+        // bounds safety
+        if (targetRow < 0 || targetRow >= getGame().getBoard().getRows() ||
+                targetCol < 0 || targetCol >= getGame().getBoard().getColumns()) {
+            clearSelection();
+            return;
+        }
 
         Move move = new Move(
                 selectedPiece.getRow(),
@@ -106,7 +114,27 @@ public class GameInputHandler extends MouseAdapter {
 
         controller.handleMove(move);
 
+        clearSelection();
+    }
+
+    private void calculateTargets(Piece selected) {
+        List<Move> allMoves = getGame().getValidMoves(selected.getColour());
+        List<Point> targets = new ArrayList<>();
+
+        for (Move m : allMoves) {
+            if (m.getFromRow() == selected.getRow()
+                    && m.getFromCol() == selected.getColumn()) {
+                // store as BOARD coordinates (col,row)
+                targets.add(new Point(m.getToCol(), m.getToRow()));
+            }
+        }
+
+        graphicsBoard.setHighlightSquares(targets);
+    }
+
+    private void clearSelection() {
         selectedPiece = null;
+        graphicsBoard.stopDragging();
         graphicsBoard.clearHighlightSquares();
     }
 }

@@ -7,16 +7,9 @@ import view.SpriteSheet;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-/**
- *  String white  = "#ebecd0";
- *     String green = "#739552";
- *     String greenSelected = "#a3d160";
- *     String blackMilitary = "#464341";
- *     String whiteMilitary = "#fff";
- */
+
 public class GraphicsBoard extends JPanel {
 
     private final int tileSize;
@@ -25,67 +18,109 @@ public class GraphicsBoard extends JPanel {
     private Piece draggingPiece;
     private int dragX, dragY;
 
-    private List<Point> highlightSquares;
+    private List<Point> highlightSquares = new ArrayList<>();
+
+    private boolean flipped = false;
 
     public GraphicsBoard(Board board, int tileSize) {
+        this.board = board;
         this.tileSize = tileSize;
-        this.setPreferredSize(
-                new Dimension(
+
+        setPreferredSize(new Dimension(
                 board.getColumns() * tileSize,
                 board.getRows() * tileSize
-                ));
-        this.board = board;
-        highlightSquares = new ArrayList<>();
+        ));
+    }
+
+    public void setFlipped(boolean flipped) {
+        this.flipped = flipped;
+        repaint();
+    }
+
+    private int viewRow(int boardRow) {
+        return flipped ? board.getRows() - 1 - boardRow : boardRow;
+    }
+
+    private int viewCol(int boardCol) {
+        return flipped ? board.getColumns() - 1 - boardCol : boardCol;
+    }
+
+    public Point screenToBoard(int x, int y) {
+        int col = x / tileSize;
+        int row = y / tileSize;
+
+        if (flipped) {
+            col = board.getColumns() - 1 - col;
+            row = board.getRows() - 1 - row;
+        }
+        return new Point(col, row);
     }
 
     public void startDragging(Piece piece, int x, int y) {
-        this.draggingPiece = piece;
-        this.dragX = x;
-        this.dragY = y;
+        draggingPiece = piece;
+        dragX = x;
+        dragY = y;
         repaint();
     }
 
     public void updateDragging(int x, int y) {
-        this.dragX = x;
-        this.dragY = y;
+        dragX = x;
+        dragY = y;
         repaint();
     }
 
     public void stopDragging() {
-        this.draggingPiece = null;
+        draggingPiece = null;
         repaint();
     }
 
     @Override
-    public void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        //paint the tiles
+        // Tiles
         for (int row = 0; row < board.getRows(); row++) {
-            for (int column = 0; column < board.getColumns(); column++) {
-                g2d.setColor((column + row) % 2 == 1
+            for (int col = 0; col < board.getColumns(); col++) {
+
+                int vRow = viewRow(row);
+                int vCol = viewCol(col);
+
+                g2d.setColor((row + col) % 2 == 1
                         ? new Color(82, 141, 149)
                         : new Color(235, 236, 208));
-                g2d.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
+
+                g2d.fillRect(
+                        vCol * tileSize,
+                        vRow * tileSize,
+                        tileSize,
+                        tileSize
+                );
             }
         }
 
-        //dots and rings
         drawHighlights(g2d);
 
-        //pieces
+        // Pieces
         for (int row = 0; row < board.getRows(); row++) {
-            for (int column = 0; column < board.getColumns(); column++) {
-                Piece piece = board.getPiece(row, column);
+            for (int col = 0; col < board.getColumns(); col++) {
+
+                Piece piece = board.getPiece(row, col);
                 if (piece.getType() == PieceType.EMPTY) continue;
                 if (piece == draggingPiece) continue;
 
-                Image sprite = SpriteSheet.getSprite(piece.getType(), piece.getColour());
+                int vRow = viewRow(row);
+                int vCol = viewCol(col);
+
+                Image sprite = SpriteSheet.getSprite(
+                        piece.getType(),
+                        piece.getColour()
+                );
+
                 g2d.drawImage(
                         sprite,
-                        column * tileSize,
-                        row * tileSize,
+                        vCol * tileSize,
+                        vRow * tileSize,
                         tileSize,
                         tileSize,
                         null
@@ -93,15 +128,21 @@ public class GraphicsBoard extends JPanel {
             }
         }
 
-        //dragging on top
+        // Dragging piece on top
         if (draggingPiece != null) {
             Image sprite = SpriteSheet.getSprite(
                     draggingPiece.getType(),
                     draggingPiece.getColour()
             );
-            int x = dragX - tileSize / 2;
-            int y = dragY - tileSize / 2;
-            g2d.drawImage(sprite, x, y, tileSize, tileSize, null);
+
+            g2d.drawImage(
+                    sprite,
+                    dragX - tileSize / 2,
+                    dragY - tileSize / 2,
+                    tileSize,
+                    tileSize,
+                    null
+            );
         }
     }
 
@@ -110,32 +151,35 @@ public class GraphicsBoard extends JPanel {
         int radius = tileSize / 6;
 
         for (Point p : highlightSquares) {
-            int col = p.x;
             int row = p.y;
+            int col = p.x;
+
+            int vRow = viewRow(row);
+            int vCol = viewCol(col);
+
+            int centerX = vCol * tileSize + tileSize / 2;
+            int centerY = vRow * tileSize + tileSize / 2;
 
             Piece targetPiece = board.getPiece(row, col);
-            int centerX = col * tileSize + tileSize / 2;
-            int centerY = row * tileSize + tileSize / 2;
 
             if (targetPiece.getType() == PieceType.EMPTY) {
                 g2d.setColor(dotColor);
-                g2d.fillOval(centerX - radius,
+                g2d.fillOval(
+                        centerX - radius,
                         centerY - radius,
-                        radius * 2, radius * 2
+                        radius * 2,
+                        radius * 2
                 );
             } else {
-                //enemy piece
                 int inset = tileSize / 20;
                 int ringThickness = tileSize / 11;
 
-                Color ringColor = new Color(50, 50, 50, 60);
-
                 Graphics2D g2 = (Graphics2D) g2d.create();
-                g2.setColor(ringColor);
+                g2.setColor(new Color(50, 50, 50, 60));
                 g2.setStroke(new BasicStroke(ringThickness));
                 g2.drawOval(
-                        col * tileSize + inset,
-                        row * tileSize + inset,
+                        vCol * tileSize + inset,
+                        vRow * tileSize + inset,
                         tileSize - inset * 2,
                         tileSize - inset * 2
                 );
@@ -145,16 +189,16 @@ public class GraphicsBoard extends JPanel {
     }
 
     public void setHighlightSquares(List<Point> squares) {
-        this.highlightSquares = squares;
+        highlightSquares = squares;
         repaint();
     }
 
     public void clearHighlightSquares() {
-        this.highlightSquares.clear();
+        highlightSquares.clear();
         repaint();
     }
 
     public int getTileSize() {
-        return this.tileSize;
+        return tileSize;
     }
 }
